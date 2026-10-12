@@ -5,6 +5,7 @@ import sys
 
 from .analysis import analyze_files
 from .report import build_report
+from .errors import StreamStatsError
 
 parser = argparse.ArgumentParser(
     prog="python -m streamstats",
@@ -70,7 +71,7 @@ def main():
             with open(f"../data/{args.output}", "w", encoding="utf-8") as json_file:
                 json.dump(report, json_file, indent=4)
         return 0
-    except ValueError as e:
+    except StreamStatsError as e:
         sys.stderr.write(f"Error: {e}\n")
         return 2
     except TypeError as e:

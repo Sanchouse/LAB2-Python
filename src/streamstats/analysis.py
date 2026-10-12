@@ -48,45 +48,22 @@ def iter_csv(stats:Stats, path:str, skip:bool, number_of_file:int, logger:Logger
             for number_of_row, row in enumerate(csv.DictReader(file), start=1):
                 try:
                     if row["level"] not in ERROR_LEVELS:
-                        stats = stats + parser(row["timestamp"], row["level"], row["source"], row["message"])
+                        stats = stats + parser(row["timestamp"], row["level"], row["source"], row["message"], number_of_row, path)
                     else:
                         if not skip:
                             validation(f"{row["level"]}", path, number_of_row, number_of_file)
                         else:
-                            stats = stats + parser(row["timestamp"], row["level"], row["source"], row["message"])
+                            stats = stats + parser(row["timestamp"], row["level"], row["source"], row["message"], number_of_row, path)
                             stats.skipped += 1
-                            logger.warning(f"File {path} [{number_of_file}] has {row["level"]} in row {number_of_row}.")
+                            if logger:
+                                logger.warning(f"File {path} [{number_of_file}] has {row["level"]} in row {number_of_row}.")
                 except KeyError:
                     validation("INCORRECT FIELDS")
     except FileNotFoundError:
         validation("MISSING FILE", path)
 
 
-def iter_csv(stats:Stats, path:str, skip:bool, number_of_file:int, logger:Logger):
-    try:
-        with Path(path).open(encoding="utf-8", newline="") as file:
-            for number_of_row, row in enumerate(csv.reader(file)):
-                timestamp, level, source, message = row[0], row[1], row[2], row[3]
-                try:
-                    if number_of_row != 0 and row:
-                        if level not in ERROR_LEVELS:
-                            stats = stats + parser(timestamp, level, source, message)
-                        else:
-                            if not skip:
-                                validation(f"{level}", path, number_of_row, number_of_file)
-                            else:
-                                stats = stats + parser(timestamp, level, source, message)
-                                stats.skipped += 1
-                                logger.warning(f"File {path} [{number_of_file}] has {level} in row {number_of_row}.")
-                    elif not row:
-                        validation("EMPTY ROW", number_of_row+1)
-                except KeyError:
-                    validation("INCORRECT FIELDS")
-    except FileNotFoundError:
-        validation("MISSING FILE", path)
-
-
-def iter_jsonl(stats:Stats, path:str, skip:bool, number_of_file:int, logger:Logger):
+def iter_jsonl(stats:Stats, path:str, skip:bool, number_of_file:int, logger=None):
     try:
         with Path(path).open(encoding="utf-8", newline="") as file:
             for number_of_row, row in enumerate(file):
@@ -106,14 +83,15 @@ def iter_jsonl(stats:Stats, path:str, skip:bool, number_of_file:int, logger:Logg
                         else:
                             stats = stats + parser(value["timestamp"], value["level"], value["source"], value["message"], number_of_row, path)
                             stats.skipped += 1
-                            logger.warning(f"File {path} [{number_of_file}] has {value["level"]} in row {number_of_row}.")
+                            if logger:
+                                logger.warning(f"File {path} [{number_of_file}] has {value["level"]} in row {number_of_row}.")
                 except KeyError:
                     validation("INCORRECT FIELDS")
     except FileNotFoundError:
         validation("MISSING FILE", path)
 
 
-def analyze_files(inputs: list, format_of_file: str, skip: bool, logger: Logger):
+def analyze_files(inputs: list, format_of_file: str, skip: bool, logger=None):
     stats = Stats()
     for i in range(len(inputs)):
         if format_of_file != "csv" and format_of_file != "jsonl":
