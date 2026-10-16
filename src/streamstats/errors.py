@@ -25,14 +25,19 @@ class InvalidTimestampError(StreamStatsError):
 class IncorrectDataError(StreamStatsError):
     pass
 
+class UnicodeError(StreamStatsError):
+    pass
+
 
 def validation(type_of_error:str, *args):
+    if type_of_error == "UNICODE ERROR":
+        raise UnicodeError(f"Unicode of file '{args[0]}' is not utf-8")
     if type_of_error == "INCORRECT TIME":
         raise IncorrectDateError("Does not conform to the ISO 8601 format.")
     elif type_of_error == "FUTURE":
         raise IncorrectDateError("Impossible date and time.")
     elif type_of_error == "INCORRECT LEVEL":
-        raise IncorrectDateError(f"Incorrect type of level: {args[0]}")
+        raise IncorrectDataError(f"Incorrect type of level: {args[0]}")
     elif type_of_error == "EMPTY ROW":
         raise IncorrectDataError(f"row №{args[0]} cannot be empty.")
     elif type_of_error == "EMPTY SOURCE":
