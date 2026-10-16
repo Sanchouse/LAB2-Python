@@ -6,7 +6,7 @@ class ErrorOrWarningLevelError(TypeError):
     pass
 
 
-class IncorrectDateError(ValueError):
+class IncorrectDateError(StreamStatsError):
     pass
 
 
@@ -24,6 +24,7 @@ class InvalidTimestampError(StreamStatsError):
 
 class IncorrectDataError(StreamStatsError):
     pass
+
 
 class UnicodeError(StreamStatsError):
     pass
