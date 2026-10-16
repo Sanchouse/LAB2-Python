@@ -61,6 +61,8 @@ def iter_csv(stats:Stats, path:str, skip:bool, number_of_file:int, logger:Logger
                     validation("INCORRECT FIELDS")
     except FileNotFoundError:
         validation("MISSING FILE", path)
+    except UnicodeDecodeError:
+        validation("UNICODE ERROR", path)
 
 
 def iter_jsonl(stats:Stats, path:str, skip:bool, number_of_file:int, logger=None):
@@ -89,6 +91,8 @@ def iter_jsonl(stats:Stats, path:str, skip:bool, number_of_file:int, logger=None
                     validation("INCORRECT FIELDS")
     except FileNotFoundError:
         validation("MISSING FILE", path)
+    except UnicodeDecodeError:
+        validation("UNICODE ERROR", path)
 
 
 def analyze_files(inputs: list, format_of_file: str, skip: bool, logger=None):
