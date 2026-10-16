@@ -11,6 +11,7 @@ REQUIRED_FIELDS = ("timestamp", "level", "source", "message")
 
 @dataclass(frozen=True)
 class Event:
+    """Class for working with data"""
     timestamp: datetime
     level: str
     source: str
@@ -18,6 +19,7 @@ class Event:
 
 
 def parse_timestamp(timestamp: Any) -> datetime:
+    """Checks the correctness of the time and converts it into a datetime object"""
     try:
         timestamp = datetime.fromisoformat(timestamp.strip())
         if timestamp > datetime.now(timezone.utc):
@@ -28,6 +30,7 @@ def parse_timestamp(timestamp: Any) -> datetime:
 
 
 def event_from_dict(timestamp, level, source, message) -> Event:
+    """Create Event object from line"""
     if level not in REQUIRED_FIELDS:
         validation("MISSING FIELD")
 

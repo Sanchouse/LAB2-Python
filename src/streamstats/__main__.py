@@ -4,12 +4,15 @@ import logging
 import sys
 
 from .analysis import analyze_files
-from .report import build_report
 from .errors import StreamStatsError
+from .report import build_report
 
 parser = argparse.ArgumentParser(
     prog="python -m streamstats",
-    description="Запись логов"
+    description=(
+        "Потоковый анализатор событий из CSV и JSONL файлов: "
+        "проверяет события, считает статистику и сохраняет JSON-отчёт."
+    ),
 )
 
 commands = parser.add_subparsers(
@@ -19,27 +22,32 @@ commands = parser.add_subparsers(
 
 analyze_parser = commands.add_parser(
     "analyze",
-    help=""
+    help=(
+        "Читает события из одного или нескольких файлов построчно, "
+        "проверяет их и объединяет статистику всех файлов в один отчёт: "
+        "общее число событий, счётчики по уровням и источникам, "
+        "top-5 источников ошибок ERROR/CRITICAL, первая и последняя временная метка."
+    ),
 )
 
 analyze_parser.add_argument(
     "inputs",
     nargs="+",
     metavar="INPUT",
-    help="Один или несколько файлов",
+    help="один или несколько входных файлов (все в одном формате)",
 )
 
 analyze_parser.add_argument(
     "--format",
     required=True,
     metavar="{csv,jsonl}",
-    help="Формат входных файлов"
+    help="формат входных файлов: csv (с заголовком) или jsonl",
 )
 
 analyze_parser.add_argument(
     "--output",
     required=False,
-    help="куда сохранить JSON-отчёт; если не указан, отчёт печатается в stdout"
+    help="куда сохранить JSON-отчёт (по умолчанию: REPORT.json в текущей папке)",
 )
 
 analyze_parser.add_argument(

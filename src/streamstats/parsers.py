@@ -1,9 +1,9 @@
-from .models import Event
 from .errors import validation
-from .models import event_from_dict
+from .models import Event, event_from_dict
 
 
 def parser(timestamp: str, level: str, source: str, message: str, number_of_row:int, path:str) -> Event:
+    """Checks each parameter for errors and returns an Event object."""
     if source == "":
         validation("EMPTY SOURCE", number_of_row, path)
     if timestamp == None:

@@ -5,7 +5,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from logging import Logger
 from pathlib import Path
-from io import StringIO
 
 from .errors import validation
 from .models import ERROR_LEVELS, Event
@@ -14,6 +13,7 @@ from .parsers import parser
 
 @dataclass
 class Stats:
+    """Сollects statistics on input files"""
     total_events: int = 0
     levels: Counter = field(default_factory=Counter)
     sources: Counter = field(default_factory=Counter)
@@ -38,11 +38,13 @@ class Stats:
         return self
 
     def top_error_sources(self, n: int=5) -> list[dict]:
+        """Return top-5 error sources"""
         ordered = sorted(self.error_sources.items(), key=lambda item: (-item[1], item[0]))
         return [{"source": name, "count": count} for name, count in ordered[:n]]
 
 
-def iter_csv(stats:Stats, path:str, skip:bool, number_of_file:int, logger:Logger):
+def iter_csv(stats:Stats, path:str, skip:bool, number_of_file:int, logger:Logger) -> None:
+    "Reads the csv file."
     try:
         with Path(path).open(encoding="utf-8", newline="") as file:
             for number_of_row, row in enumerate(csv.DictReader(file), start=1):
@@ -65,7 +67,8 @@ def iter_csv(stats:Stats, path:str, skip:bool, number_of_file:int, logger:Logger
         validation("UNICODE ERROR", path)
 
 
-def iter_jsonl(stats:Stats, path:str, skip:bool, number_of_file:int, logger=None):
+def iter_jsonl(stats:Stats, path:str, skip:bool, number_of_file:int, logger=None) -> None:
+    """Reads the JSONL file."""
     try:
         with Path(path).open(encoding="utf-8", newline="") as file:
             for number_of_row, row in enumerate(file):
@@ -95,7 +98,8 @@ def iter_jsonl(stats:Stats, path:str, skip:bool, number_of_file:int, logger=None
         validation("UNICODE ERROR", path)
 
 
-def analyze_files(inputs: list, format_of_file: str, skip: bool, logger=None):
+def analyze_files(inputs: list, format_of_file: str, skip: bool, logger=None) -> Stats:
+    """Reads each input file one by one."""
     stats = Stats()
     for i in range(len(inputs)):
         if format_of_file != "csv" and format_of_file != "jsonl":

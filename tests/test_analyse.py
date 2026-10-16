@@ -1,11 +1,13 @@
-import pytest
-import os
-import json
 import csv
+import json
+import os
 from dataclasses import dataclass
+
+import pytest
+
+import streamstats.errors as err
 from streamstats.analysis import analyze_files
 from streamstats.report import build_report
-import streamstats.errors as err
 
 
 @dataclass(frozen=True)
@@ -58,8 +60,7 @@ FIELDS = ["timestamp", "level", "source", "message"]
 
 def write_jsonl(path, lines):
     with open(path, "w", encoding="utf-8") as jsonl_file:
-            for row in lines:
-                jsonl_file.write(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n")
+            jsonl_file.writelines(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n" for row in lines)
 
 def write_csv(path, lines):
     with open(path, "w", encoding="utf-8") as file:

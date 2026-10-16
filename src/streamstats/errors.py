@@ -29,7 +29,8 @@ class UnicodeError(StreamStatsError):
     pass
 
 
-def validation(type_of_error:str, *args):
+def validation(type_of_error:str, *args) -> None:
+    """Raise an error if something wrong"""
     if type_of_error == "UNICODE ERROR":
         raise UnicodeError(f"Unicode of file '{args[0]}' is not utf-8")
     if type_of_error == "INCORRECT TIME":

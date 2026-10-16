@@ -2,6 +2,7 @@ from .analysis import Stats
 
 
 def build_report(stats: Stats, skips: bool) -> dict:
+    """Return a data for reports."""
     if skips:
         return {
         "total_events": stats.total_events,
