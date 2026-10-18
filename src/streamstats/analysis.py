@@ -8,7 +8,7 @@ from pathlib import Path
 
 from .errors import validation
 from .models import ERROR_LEVELS, Event
-from .parsers import parser
+from .parsers import parser, iter_csv, iter_jsonl
 
 
 @dataclass
@@ -43,22 +43,13 @@ class Stats:
         return [{"source": name, "count": count} for name, count in ordered[:n]]
 
 
-def iter_csv(stats:Stats, path:str, skip:bool, number_of_file:int, logger:Logger) -> None:
+"""def iter_csv(stats:Stats, path:str, skip:bool, number_of_file:int, logger:Logger) -> None:
     "Reads the csv file."
     try:
         with Path(path).open(encoding="utf-8", newline="") as file:
             for number_of_row, row in enumerate(csv.DictReader(file), start=1):
                 try:
-                    if row["level"] not in ERROR_LEVELS:
-                        stats = stats + parser(row["timestamp"], row["level"], row["source"], row["message"], number_of_row, path)
-                    else:
-                        if not skip:
-                            validation(f"{row["level"]}", path, number_of_row, number_of_file)
-                        else:
-                            stats = stats + parser(row["timestamp"], row["level"], row["source"], row["message"], number_of_row, path)
-                            stats.skipped += 1
-                            if logger:
-                                logger.warning(f"File {path} [{number_of_file}] has {row["level"]} in row {number_of_row}.")
+                    
                 except KeyError:
                     validation("INCORRECT FIELDS")
     except FileNotFoundError:
@@ -68,7 +59,7 @@ def iter_csv(stats:Stats, path:str, skip:bool, number_of_file:int, logger:Logger
 
 
 def iter_jsonl(stats:Stats, path:str, skip:bool, number_of_file:int, logger=None) -> None:
-    """Reads the JSONL file."""
+    """"Reads the JSONL file."""""
     try:
         with Path(path).open(encoding="utf-8", newline="") as file:
             for number_of_row, row in enumerate(file):
@@ -95,7 +86,7 @@ def iter_jsonl(stats:Stats, path:str, skip:bool, number_of_file:int, logger=None
     except FileNotFoundError:
         validation("MISSING FILE", path)
     except UnicodeDecodeError:
-        validation("UNICODE ERROR", path)
+        validation("UNICODE ERROR", path)"""
 
 
 def analyze_files(inputs: list, format_of_file: str, skip: bool, logger=None) -> Stats:
@@ -107,8 +98,30 @@ def analyze_files(inputs: list, format_of_file: str, skip: bool, logger=None) ->
         if format_of_file != inputs[i].split(".")[-1]:
             validation("DIFFERENT TYPES", format_of_file, inputs[i].split(".")[-1])
         if format_of_file == "csv":
-            iter_csv(stats, inputs[i], skip, i, logger)
+            reader = iter_csv(inputs[i])
+            for number_of_row, row in reader:
+                if row.get("level") not in ERROR_LEVELS:
+                    stats = stats + parser(row.get("timestamp"), row.get("level"), row.get("source"), row.get("message"), number_of_row, inputs[i])
+                else:
+                    if not skip:
+                        validation(f"{row.get("level")}", inputs[i], number_of_row, i+1)
+                    else:
+                        stats = stats + parser(row.get("timestamp"), row.get("level"), row.get("source"), row.get("message"), number_of_row, inputs[i])
+                        stats.skipped += 1
+                        if logger:
+                            logger.warning(f"File {inputs[i]} [{i+1}] has {row.get("level")} in row {number_of_row}.")
         if format_of_file == "jsonl":
-            iter_jsonl(stats, inputs[i], skip, i, logger)
+            reader = iter_jsonl(inputs[i])
+            for number_of_row, row in reader:
+                if row.get("level") not in ERROR_LEVELS:
+                    stats = stats + parser(row.get("timestamp"), row.get("level"), row.get("source"), row.get("message"), number_of_row, inputs[i])
+                else:
+                    if not skip:
+                        validation(f"{row.get("level")}", inputs[i], number_of_row, i+1)
+                    else:
+                        stats = stats + parser(row.get("timestamp"), row.get("level"), row.get("source"), row.get("message"), number_of_row, inputs[i])
+                        stats.skipped += 1
+                        if logger:
+                            logger.warning(f"File {inputs[i]} [{i+1}] has {row.get("level")} in row {number_of_row}.")
 
     return stats
