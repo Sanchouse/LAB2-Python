@@ -1,14 +1,10 @@
-import csv
-import json
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime
-from logging import Logger
-from pathlib import Path
 
 from .errors import validation
 from .models import ERROR_LEVELS, Event
-from .parsers import parser, iter_csv, iter_jsonl
+from .parsers import iter_csv, iter_jsonl, parser
 
 
 @dataclass

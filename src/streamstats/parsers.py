@@ -1,8 +1,10 @@
-from .errors import validation
-from .models import Event, event_from_dict
-from pathlib import Path
 import csv
 import json
+from pathlib import Path
+
+from .errors import validation
+from .models import Event, event_from_dict
+
 
 def parser(timestamp: str, level: str, source: str, message: str, number_of_row:int, path:str) -> Event:
     """Checks each parameter for errors and returns an Event object."""
@@ -46,7 +48,7 @@ def iter_jsonl(path):
                     continue
                 try:
                     value = json.loads(line)
-                except json.JSONDecodeError as error:
+                except json.JSONDecodeError:
                     yield number, validation("INCORRECT READ", path)
                     continue
                 except UnicodeEncodeError:
