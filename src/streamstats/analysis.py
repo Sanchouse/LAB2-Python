@@ -1,6 +1,7 @@
 from collections import Counter
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
+from typing import Any
 
 from .errors import validation
 from .models import ERROR_LEVELS, Event
@@ -39,50 +40,12 @@ class Stats:
         return [{"source": name, "count": count} for name, count in ordered[:n]]
 
 
-"""def iter_csv(stats:Stats, path:str, skip:bool, number_of_file:int, logger:Logger) -> None:
-    "Reads the csv file."
-    try:
-        with Path(path).open(encoding="utf-8", newline="") as file:
-            for number_of_row, row in enumerate(csv.DictReader(file), start=1):
-                try:
-                    
-                except KeyError:
-                    validation("INCORRECT FIELDS")
-    except FileNotFoundError:
-        validation("MISSING FILE", path)
-    except UnicodeDecodeError:
-        validation("UNICODE ERROR", path)
-
-
-def iter_jsonl(stats:Stats, path:str, skip:bool, number_of_file:int, logger=None) -> None:
-    """"Reads the JSONL file."""""
-    try:
-        with Path(path).open(encoding="utf-8", newline="") as file:
-            for number_of_row, row in enumerate(file):
-                try:
-                    row = row.strip()
-                    if not row:
-                        validation("EMPTY ROW", number_of_row+1)
-                    try:
-                        value = json.loads(row)
-                    except json.JSONDecodeError:
-                        validation("INCORRECT READ", path)
-                    if value["level"] not in ERROR_LEVELS:
-                        stats = stats + parser(value["timestamp"], value["level"], value["source"], value["message"], number_of_row, path)
-                    else:
-                        if not skip:
-                            validation(f"{value["level"]}", path, number_of_row, number_of_file)
-                        else:
-                            stats = stats + parser(value["timestamp"], value["level"], value["source"], value["message"], number_of_row, path)
-                            stats.skipped += 1
-                            if logger:
-                                logger.warning(f"File {path} [{number_of_file}] has {value["level"]} in row {number_of_row}.")
-                except KeyError:
-                    validation("INCORRECT FIELDS")
-    except FileNotFoundError:
-        validation("MISSING FILE", path)
-    except UnicodeDecodeError:
-        validation("UNICODE ERROR", path)"""
+def parse_timestamp(timestamp: Any) -> datetime:
+    """Checks the correctness of the time and converts it into a datetime object"""
+    timestamp = datetime.fromisoformat(timestamp.strip())
+    if timestamp > datetime.now(timezone.utc):
+        raise ValueError
+    return timestamp
 
 
 def analyze_files(inputs: list, format_of_file: str, skip: bool, logger=None) -> Stats:
@@ -94,28 +57,59 @@ def analyze_files(inputs: list, format_of_file: str, skip: bool, logger=None) ->
         if format_of_file != inputs[i].split(".")[-1]:
             validation("DIFFERENT TYPES", format_of_file, inputs[i].split(".")[-1])
         if format_of_file == "csv":
+            
             reader = iter_csv(inputs[i])
             for number_of_row, row in reader:
+                if row == "ERROR":
+                    if not skip:
+                        raise validation("INCORRECT DATA")
+                    else:
+                        stats.skipped += 1
+                        if logger:
+                            logger.warning(f"Incorrect line {number_of_row} if file {inputs[i]}.")
+                    continue
+                try:
+                    timestamp = parse_timestamp(row.get("timestamp"))
+                except ValueError:
+                    if skip:
+                        stats.skipped += 1
+                        if logger:
+                            logger.warning(f"Incorrect line {number_of_row} if file {inputs[i]}.")
+                        continue
+                    validation("INCORRECT TIME")
                 if row.get("level") not in ERROR_LEVELS:
-                    stats = stats + parser(row.get("timestamp"), row.get("level"), row.get("source"), row.get("message"), number_of_row, inputs[i])
+                    
+                    stats = stats + parser(timestamp, row.get("level"), row.get("source"), row.get("message"), number_of_row, inputs[i])
                 else:
                     if not skip:
                         validation(f"{row.get("level")}", inputs[i], number_of_row, i+1)
                     else:
-                        stats = stats + parser(row.get("timestamp"), row.get("level"), row.get("source"), row.get("message"), number_of_row, inputs[i])
+                        stats = stats + parser(timestamp, row.get("level"), row.get("source"), row.get("message"), number_of_row, inputs[i])
                         stats.skipped += 1
                         if logger:
                             logger.warning(f"File {inputs[i]} [{i+1}] has {row.get("level")} in row {number_of_row}.")
+                
+                
+
         if format_of_file == "jsonl":
             reader = iter_jsonl(inputs[i])
             for number_of_row, row in reader:
+                try:
+                    timestamp = parse_timestamp(row.get("timestamp"))
+                except ValueError:
+                    if skip:
+                        stats.skipped += 1
+                        if logger:
+                            logger.warning(f"Incorrect line {number_of_row} if file {inputs[i]}.")
+                        continue
+                    validation("INCORRECT TIME")
                 if row.get("level") not in ERROR_LEVELS:
-                    stats = stats + parser(row.get("timestamp"), row.get("level"), row.get("source"), row.get("message"), number_of_row, inputs[i])
+                    stats = stats + parser(timestamp, row.get("level"), row.get("source"), row.get("message"), number_of_row, inputs[i])
                 else:
                     if not skip:
                         validation(f"{row.get("level")}", inputs[i], number_of_row, i+1)
                     else:
-                        stats = stats + parser(row.get("timestamp"), row.get("level"), row.get("source"), row.get("message"), number_of_row, inputs[i])
+                        stats = stats + parser(timestamp, row.get("level"), row.get("source"), row.get("message"), number_of_row, inputs[i])
                         stats.skipped += 1
                         if logger:
                             logger.warning(f"File {inputs[i]} [{i+1}] has {row.get("level")} in row {number_of_row}.")

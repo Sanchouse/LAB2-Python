@@ -29,9 +29,12 @@ class IncorrectDataError(StreamStatsError):
 class UnicodeError(StreamStatsError):
     pass
 
+class EmptyFile(StreamStatsError):
+    pass
 
 def validation(type_of_error:str, *args) -> None:
     """Raise an error if something wrong"""
+
     if type_of_error == "UNICODE ERROR":
         raise UnicodeError(f"Unicode of file '{args[0]}' is not utf-8")
     if type_of_error == "INCORRECT TIME":
@@ -44,6 +47,10 @@ def validation(type_of_error:str, *args) -> None:
         raise IncorrectDataError(f"row №{args[0]} cannot be empty.")
     elif type_of_error == "EMPTY SOURCE":
         raise IncorrectDataError(f"The source in file '{args[1]}' in row {args[0]} cannot be empty.")
+    elif type_of_error == "INCORRECT COLUMNS":
+        raise IncorrectDataError(f"Incorrect columns in {args[0]}")
+    elif type_of_error == "INCORRECT DATA":
+        raise IncorrectDataError("Incorrect type of columns")
     elif type_of_error == "MISSING VALUE":
         raise IncorrectDataError(f"The column '{args[0]}' in row cannot be missing.")
     elif type_of_error == "DIFFERENT TYPES":
@@ -60,3 +67,5 @@ def validation(type_of_error:str, *args) -> None:
         raise ErrorOrWarningLevelError(f"File {args[0]} [{args[2]}] has ERROR in row {args[1]}.")
     elif type_of_error == "CRITICAL":
         raise ErrorOrWarningLevelError(f"File {args[0]} [{args[2]}] has CRITICAL in row {args[1]}.")
+    elif type_of_error == "EMPTY FILE":
+        raise EmptyFile("Empty file")
