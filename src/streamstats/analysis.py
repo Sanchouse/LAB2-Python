@@ -94,6 +94,14 @@ def analyze_files(inputs: list, format_of_file: str, skip: bool, logger=None) ->
         if format_of_file == "jsonl":
             reader = iter_jsonl(inputs[i])
             for number_of_row, row in reader:
+                if row == "ERROR":
+                    if not skip:
+                        raise validation("INCORRECT DATA")
+                    else:
+                        stats.skipped += 1
+                        if logger:
+                            logger.warning(f"Incorrect line {number_of_row} if file {inputs[i]}.")
+                    continue
                 try:
                     timestamp = parse_timestamp(row.get("timestamp"))
                 except ValueError:

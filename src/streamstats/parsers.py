@@ -47,8 +47,6 @@ def iter_csv(path):
         validation("MISSING FILE", path)
     except UnicodeDecodeError:
         validation("UNICODE ERROR", path)
-    except UnboundLocalError:
-        validation("INCORECT DATA")
 
 
 
@@ -65,13 +63,12 @@ def iter_jsonl(path):
                 except json.JSONDecodeError:
                     yield number, validation("INCORRECT READ", path)
                     continue
-                except UnicodeEncodeError:
-                    yield number, validation("UNICODE ERROR", path)
-                    continue
+                if not value:
+                    value = "ERROR"
+                elif "timestamp" not in value or "level" not in value or "source" not in value or "message" not in value:
+                    value = "ERROR"
                 yield number, value
     except FileNotFoundError:
         validation("MISSING FILE", path)
     except UnicodeDecodeError:
         validation("UNICODE ERROR", path)
-    except UnboundLocalError:
-        validation("INCORECT DATA")
